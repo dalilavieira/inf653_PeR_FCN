@@ -59,7 +59,7 @@ int main()
 {
 
     srand(time(0));
-    string filename("chebyshev.in");
+    string filename("/content/inf653_PeR_FCN/chebyshev.in");
     read_file(filename);
     
     int size_g = int(pow(n_vertex,0.5)*1.7);
