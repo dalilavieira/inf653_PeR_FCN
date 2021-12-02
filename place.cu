@@ -21,6 +21,13 @@ void host_add(int *adj, int *loc, int *grid, int* out) {
 		c[idx] = a[idx] + b[idx];*/
 }
 
+__global__ void device_add(int *a, int *b, int *c) {
+
+	int index = threadIdx.x + blockIdx.x * blockDim.x;
+        c[index] = a[index] + b[index];
+}
+
+
 int read_file(string filename){
     ifstream indata;
     indata.open(filename);
