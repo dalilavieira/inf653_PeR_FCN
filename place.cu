@@ -104,9 +104,9 @@ int main()
         do{
           x = rand()%(size_g);
           y = rand()%(size_g);
-        }while(gridplace[x*size_g+y+1] != 0);
+        }while(gridplace[x*size_g+y] != 0);
 
-        gridplace[x*size_g+y+1] = i;
+        gridplace[x*size_g+y] = i;
         loc[i*n_vertex] = x;
         loc[i*n_vertex+1] = y;
      //   cout << i << " " << x << " " << y << endl;
@@ -120,7 +120,7 @@ int main()
     cout << "Print: placement grid" << endl;
     for (int i=0; i<size_g; i++){
      for (int j=0; j<size_g; j++)
-      cout << gridplace[i*size_g+j+1] << " ";
+      cout << gridplace[i*size_g+j] << " ";
       cout << endl;
     }
  
