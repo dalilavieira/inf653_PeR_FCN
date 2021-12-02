@@ -16,9 +16,9 @@ int n_vertex = 0;
 int n_edge = 0;
 vector <pair <int,int>> edges_list;
 
-__global__ void print_from_gpu(void) {
-	printf("Hello World! from thread [B=%d,T=%d] \
-		From GPU device\n", blockIdx.x, threadIdx.x); 
+void host_add(int *adj, int *loc, int *grid, int* out) {
+	/*for(int idx=0;idx<N;idx++)
+		c[idx] = a[idx] + b[idx];*/
 }
 
 int read_file(string filename){
@@ -65,14 +65,15 @@ int main()
     int size_g = int(pow(n_vertex,0.5)*1.7);
     
     // STARTING THE GPU CODE
-    int *adj, *loc, *gridplace;
-    int *d_adj, *d_loc, *d_gridplace; // device copies of a, b, c
+    int *adj, *loc, *gridplace, *out;
+    int *d_adj, *d_loc, *d_gridplace, *d_out; // device copies of a, b, c
     int threads_per_block=0, no_of_blocks=0;
 
     // Alloc space for host copies of a, b, c and setup input values
     adj = (int *)malloc(n_vertex*n_vertex*sizeof(int)); 
     loc = (int *)malloc(2*n_vertex*sizeof(int)); 
     gridplace = (int *)malloc(size_g*size_g*sizeof(int));
+    out = (int *)malloc(size_g*sizeof(int));
 
 
     for (int i=0; i<n_vertex; i++)  
@@ -142,7 +143,23 @@ int main()
     }
 
 
-    print_from_gpu<<<1,2>>>();
-    cudaDeviceSynchronize();
+
+    // Alloc space for device copies of a, b, c
+    cudaMalloc((void **)&d_adj, n_vertex*n_vertex*sizeof(int));
+    cudaMalloc((void **)&d_loc, 2*n_vertex*sizeof(int));
+    cudaMalloc((void **)&d_gridplace, size_g*size_g*sizeof(int));
+    cudaMalloc((void **)&d_out, size_g*sizeof(int));
+
+    // Copy inputs to device
+    cudaMemcpy(d_adj, adj, n_vertex*n_vertex*sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_loc, loc, n_vertex*2*sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_gridplace, gridplace, size_g*size_g*sizeof(int), cudaMemcpyHostToDevice);
+
+    threads_per_block = 512;
+    no_of_blocks = size_g/threads_per_block;	
+    device_add<<<no_of_blocks,threads_per_block>>>(d_adj,d_loc,d_gridplace);
+
+    // Copy result back to host
+    //cudaMemcpy(c, d_c, size_g, cudaMemcpyDeviceToHost);
        
 }
