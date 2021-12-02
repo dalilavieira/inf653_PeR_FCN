@@ -167,6 +167,6 @@ int main()
     device_add<<<no_of_blocks,threads_per_block>>>(d_adj,d_loc,d_gridplace);
 
     // Copy result back to host
-    //cudaMemcpy(c, d_c, size_g, cudaMemcpyDeviceToHost);
+    cudaMemcpy(out, d_out, size_g, cudaMemcpyDeviceToHost);
        
 }
