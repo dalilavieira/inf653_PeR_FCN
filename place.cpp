@@ -9,6 +9,7 @@
 #include<stdio.h>
 #include<stdlib.h> 
 
+
 using namespace std;
 
 int n_vertex = 0;
@@ -56,59 +57,70 @@ int read_file(string filename){
 
 int main()
 {
+
     srand(time(0));
-    string filename("/content/inf653_PeR_FCN/chebyshev.in");
+    string filename("chebyshev.in");
     read_file(filename);
+    
+    int size_g = int(pow(n_vertex,0.5)*1.7);
+    
+    // STARTING THE GPU CODE
+    int *adj, *loc, *gridplace;
+    int *d_adj, *d_loc, *d_gridplace; // device copies of a, b, c
+    int threads_per_block=0, no_of_blocks=0;
 
-    int vertex_loc[n_vertex][2];
+    // Alloc space for host copies of a, b, c and setup input values
+    adj = (int *)malloc(n_vertex*n_vertex*sizeof(int)); 
+    loc = (int *)malloc(2*n_vertex*sizeof(int)); 
+    gridplace = (int *)malloc(size_g*size_g*sizeof(int));
 
-    int adj_matrix[n_vertex][n_vertex];
+
     for (int i=0; i<n_vertex; i++)  
       for (int j=0; j<n_vertex; j++)
-        adj_matrix[i][j] = -1;
+        adj[i*n_vertex+j] = -1; //adj_matrix[i][j] = -1;
  
+    int a, b;
     for (int i=0; i<edges_list.size(); i++){
-      adj_matrix[edges_list[i].first][edges_list[i].second] = 1;
+      a = edges_list[i].first;
+      b = edges_list[i].second;
+      adj[a*n_vertex+b] = 1;
       //cout << "aaa"<< edges_list[i].first << " " << edges_list[i].second << endl;
     }
  
     cout << "Print: adj matrix" << endl;
     for (int i=0; i<n_vertex; i++) { 
       for (int j=0; j<n_vertex; j++)
-        cout << adj_matrix[i][j] << " ";
+        cout <<  adj[i*n_vertex+j] << " ";
       cout << endl;
     }
     cout << endl;
-
-    int size_g = int(pow(n_vertex,0.5)*1.7);
-    int grid[size_g][size_g];
  
     for (int i=0; i<size_g; i++)
       for (int j=0; j<size_g; j++)
-        grid[i][j] = 0;
+        gridplace[i*size_g+j] = 0;
 
     int x,y;
     for (int i=0; i<n_vertex; i++){
         do{
           x = rand()%(size_g);
           y = rand()%(size_g);
-        }while(grid[x][y] != 0);
+        }while(gridplace[x*size_g+y+1] != 0);
 
-        grid[x][y] = i;
-        vertex_loc[i][0] = x; 
-        vertex_loc[i][1] = y;
+        gridplace[x*size_g+y+1] = i;
+        loc[i*n_vertex] = x;
+        loc[i*n_vertex+1] = y;
      //   cout << i << " " << x << " " << y << endl;
     }
  
     cout << "Print: vertex loc in grid" << endl;
     for (int i=0; i<n_vertex; i++)
-      cout << i << " " <<  vertex_loc[i][0] << " " << vertex_loc[i][1] << endl;
+      cout << i << " " <<  loc[i*n_vertex] << " " << loc[i*n_vertex+1] << endl;
     cout << endl;
  
     cout << "Print: placement grid" << endl;
     for (int i=0; i<size_g; i++){
      for (int j=0; j<size_g; j++)
-      cout << grid[i][j] << " ";
+      cout << gridplace[i*size_g+j+1] << " ";
       cout << endl;
     }
  
@@ -118,17 +130,18 @@ int main()
     int total = 0;
     for (int i=0; i<n_vertex; i++) { 
       for (int j=0; j<n_vertex; j++)
-        if (adj_matrix[i][j] == 1){ // tem aresta ligando
-            origin_x = vertex_loc[i][0];
-            origin_y = vertex_loc[i][1];
-            dest_x = vertex_loc[j][0];
-            dest_y = vertex_loc[j][1];
+        if (adj[i*n_vertex+j] == 1){ // tem aresta ligando
+            origin_x = loc[i*n_vertex]; //vertex_loc[i][0];
+            origin_y = loc[i*n_vertex+1]; //vertex_loc[i][1];
+            dest_x = loc[j*n_vertex]; //vertex_loc[j][0];
+            dest_y = loc[j*n_vertex+1]; //vertex_loc[j][1];
             total += abs(origin_x - dest_x) + abs(origin_y - dest_y); 
             //cout << cost << endl;
         } 
 
     }
-    
+
+
 //    print_from_gpu<<<1,2>>>();
  //   cudaDeviceSynchronize();
        
