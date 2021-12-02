@@ -57,7 +57,7 @@ int read_file(string filename){
 int main()
 {
     srand(time(0));
-    string filename("chebyshev.in");
+    string filename("/content/inf653_PeR_FCN/chebyshev.in");
     read_file(filename);
 
     int vertex_loc[n_vertex][2];
