@@ -14,11 +14,11 @@ using namespace std;
 int n_vertex = 0;
 int n_edge = 0;
 vector <pair <int,int>> edges_list;
-
+/*
 __global__ void print_from_gpu(void) {
 	printf("Hello World! from thread [B=%d,T=%d] \
 		From GPU device\n", blockIdx.x, threadIdx.x); 
-}
+}*/
 
 int read_file(string filename){
     ifstream indata;
@@ -129,7 +129,7 @@ int main()
 
     }
     
-    print_from_gpu<<<1,2>>>();
-    cudaDeviceSynchronize();
+   // print_from_gpu<<<1,2>>>();
+  //  cudaDeviceSynchronize();
        
 }
