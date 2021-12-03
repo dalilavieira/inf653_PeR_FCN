@@ -59,7 +59,7 @@ int main()
 {
 
     srand(time(0));
-    string filename("/content/inf653_PeR_FCN/chebyshev.in");
+    string filename("chebyshev.in");
     read_file(filename);
     
     int size_g = int(pow(n_vertex,0.5)*1.7);
@@ -77,7 +77,7 @@ int main()
 
     for (int i=0; i<n_vertex; i++)  
       for (int j=0; j<n_vertex; j++)
-        adj[i*n_vertex+j] = -1; //adj_matrix[i][j] = -1;
+        adj[i*n_vertex+j] = 0; //adj_matrix[i][j] = -1;
  
     int a, b;
     for (int i=0; i<edges_list.size(); i++){
@@ -97,24 +97,24 @@ int main()
  
     for (int i=0; i<size_g; i++)
       for (int j=0; j<size_g; j++)
-        gridplace[i*size_g+j] = 0;
+        gridplace[i*size_g+j] = -1;
 
     int x,y;
     for (int i=0; i<n_vertex; i++){
         do{
           x = rand()%(size_g);
           y = rand()%(size_g);
-        }while(gridplace[x*size_g+y] != 0);
+        }while(gridplace[x*size_g+y] != -1);
 
         gridplace[x*size_g+y] = i;
-        loc[i*n_vertex] = x;
-        loc[i*n_vertex+1] = y;
+        loc[i*2] = x;
+        loc[i*2+1] = y;
      //   cout << i << " " << x << " " << y << endl;
     }
  
     cout << "Print: vertex loc in grid" << endl;
     for (int i=0; i<n_vertex; i++)
-      cout << i << " " <<  loc[i*n_vertex] << " " << loc[i*n_vertex+1] << endl;
+      cout << i << " " <<  loc[i*2] << " " << loc[i*2+1] << endl;
     cout << endl;
  
     cout << "Print: placement grid" << endl;

@@ -1,3 +1,5 @@
+%%gpu 
+
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -12,21 +14,14 @@
 
 using namespace std;
 
+
 int n_vertex = 0;
 int n_edge = 0;
 vector <pair <int,int>> edges_list;
 
-void host_add(int *adj, int *loc, int *grid, int* out) {
-	/*for(int idx=0;idx<N;idx++)
-		c[idx] = a[idx] + b[idx];*/
+__global__ void hello(int *a, int *b, int *c, int* d) {
+  printf("Hello World! \n");
 }
-
-__global__ void device_add(int *a, int *b, int *c) {
-
-	int index = threadIdx.x + blockIdx.x * blockDim.x;
-        c[index] = a[index] + b[index];
-}
-
 
 int read_file(string filename){
     ifstream indata;
@@ -62,8 +57,10 @@ int read_file(string filename){
     return EXIT_SUCCESS;
 }
 
+
 int main()
 {
+  
 
     srand(time(0));
     string filename("/content/inf653_PeR_FCN/chebyshev.in");
@@ -73,26 +70,24 @@ int main()
     
     // STARTING THE GPU CODE
     int *adj, *loc, *gridplace, *out;
-    int *d_adj, *d_loc, *d_gridplace, *d_out; // device copies of a, b, c
+    int *d_adj, *d_gridplace, *d_out, *d_loc; // device copies of a, b, c
     int threads_per_block=0, no_of_blocks=0;
-
+ 
     // Alloc space for host copies of a, b, c and setup input values
     adj = (int *)malloc(n_vertex*n_vertex*sizeof(int)); 
     loc = (int *)malloc(2*n_vertex*sizeof(int)); 
     gridplace = (int *)malloc(size_g*size_g*sizeof(int));
     out = (int *)malloc(size_g*sizeof(int));
-
-
+ 
     for (int i=0; i<n_vertex; i++)  
       for (int j=0; j<n_vertex; j++)
-        adj[i*n_vertex+j] = -1; //adj_matrix[i][j] = -1;
+        adj[i*n_vertex+j] = 0; //adj_matrix[i][j] = 0;
  
     int a, b;
     for (int i=0; i<edges_list.size(); i++){
       a = edges_list[i].first;
       b = edges_list[i].second;
       adj[a*n_vertex+b] = 1;
-      //cout << "aaa"<< edges_list[i].first << " " << edges_list[i].second << endl;
     }
  
     cout << "Print: adj matrix" << endl;
@@ -102,56 +97,34 @@ int main()
       cout << endl;
     }
     cout << endl;
- 
+
     for (int i=0; i<size_g; i++)
       for (int j=0; j<size_g; j++)
-        gridplace[i*size_g+j] = 0;
+        gridplace[i*size_g+j] = -1;
 
     int x,y;
+   // x = rand()%(size_g);
     for (int i=0; i<n_vertex; i++){
         do{
           x = rand()%(size_g);
           y = rand()%(size_g);
-        }while(gridplace[x*size_g+y] != 0);
+        }while(gridplace[x*size_g+y] != -1);
 
         gridplace[x*size_g+y] = i;
-        loc[i*n_vertex] = x;
-        loc[i*n_vertex+1] = y;
+        gridplace[x*size_g+y] = i;
+        loc[i*2] = x;
+        loc[i*2+1] = y;
      //   cout << i << " " << x << " " << y << endl;
     }
  
     cout << "Print: vertex loc in grid" << endl;
     for (int i=0; i<n_vertex; i++)
-      cout << i << " " <<  loc[i*n_vertex] << " " << loc[i*n_vertex+1] << endl;
+      cout << i << " " <<  loc[i*2] << " " << loc[i*2+1] << endl;
     cout << endl;
  
-    cout << "Print: placement grid" << endl;
-    for (int i=0; i<size_g; i++){
-     for (int j=0; j<size_g; j++)
-      cout << gridplace[i*size_g+j] << " ";
-      cout << endl;
-    }
- 
-    //Sai de i e vai pra j
-    int origin_x, origin_y;
-    int dest_x, dest_y;
-    int total = 0;
-    for (int i=0; i<n_vertex; i++) { 
-      for (int j=0; j<n_vertex; j++)
-        if (adj[i*n_vertex+j] == 1){ // tem aresta ligando
-            origin_x = loc[i*n_vertex]; //vertex_loc[i][0];
-            origin_y = loc[i*n_vertex+1]; //vertex_loc[i][1];
-            dest_x = loc[j*n_vertex]; //vertex_loc[j][0];
-            dest_y = loc[j*n_vertex+1]; //vertex_loc[j][1];
-            total += abs(origin_x - dest_x) + abs(origin_y - dest_y); 
-            //cout << cost << endl;
-        } 
 
-    }
-
-
-
-    // Alloc space for device copies of a, b, c
+    //GPUT stuff
+     // Alloc space for device copies of a, b, c
     cudaMalloc((void **)&d_adj, n_vertex*n_vertex*sizeof(int));
     cudaMalloc((void **)&d_loc, 2*n_vertex*sizeof(int));
     cudaMalloc((void **)&d_gridplace, size_g*size_g*sizeof(int));
@@ -164,9 +137,13 @@ int main()
 
     threads_per_block = 512;
     no_of_blocks = size_g/threads_per_block;	
-    device_add<<<no_of_blocks,threads_per_block>>>(d_adj,d_loc,d_gridplace);
+   // device_add<<<no_of_blocks,threads_per_block>>>(d_adj,d_loc,d_gridplace);
+    
+    cudaDeviceSynchronize();
+    hello<<<1,1>>>(d_adj, d_loc, d_gridplace, d_out);
+    cudaDeviceSynchronize();
 
     // Copy result back to host
     cudaMemcpy(out, d_out, size_g, cudaMemcpyDeviceToHost);
-       
+
 }
